@@ -1,0 +1,48 @@
+mgmt:
+  network: clab
+  ipv4-subnet: 172.20.20.0/24 # 管理ネットワーク設定(IPv4のみでIPv6は利用しない)
+
+name: junos-mcp-lab
+
+topology:
+  nodes:
+    junos-mcp:
+      kind: linux
+      image: junos-mcp-server:latest
+      mgmt-ipv4: 172.20.20.11
+      cmd: sh -lc "python jmcp.py -f /app/config/devices.json -t streamable-http -H 0.0.0.0"
+      binds:
+        - ./.tokens:/app/.tokens:ro
+        - ./devices.json:/app/config/devices.json:ro
+      ports:
+        - 30030:30030
+
+    openwebui:
+      kind: linux
+      image: ghcr.io/open-webui/open-webui:latest
+      mgmt-ipv4: 172.20.20.12
+      ports:
+        - 8080:8080     # Open WebUI外部公開
+      binds:
+        - ./openwebui-data:/app/backend/data
+      env:
+        WEBUI_AUTH: "false"
+
+    cjunosevo-1:
+      kind: juniper_cjunosevolved
+      mgmt-ipv4: 172.20.20.101
+      image: cjunosevolved:25.2R1.8-EVO
+      startup-config: cjunosevo-1.cfg
+      env:
+        CPTX_COSIM: "BT"
+
+    freertr-1:
+      kind: rare
+      mgmt-ipv4: 172.20.20.102
+      image: ghcr.io/rare-freertr/freertr-containerlab:latest
+      binds:
+        - freertr-1.txt:/rtr/run/conf/rtr-sw.txt:ro
+
+  links:
+    - endpoints: ["cjunosevo-1:eth4", "freertr-1:eth1"]
+

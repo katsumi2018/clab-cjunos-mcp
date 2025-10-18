@@ -1,0 +1,11 @@
+{
+  "cjunosevo-1": {
+    "ip": "172.20.20.101",
+    "port": 22,
+    "username": "admin",
+    "auth": {
+      "type": "password",
+      "password": "admin@123"
+    }
+  }
+}

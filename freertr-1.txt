@@ -1,0 +1,80 @@
+hostname freertr-p-1
+buggy
+!
+logging buffered informational 16
+!
+crypto rsakey rsa generate 2048
+!
+crypto dsakey dsa generate 1024
+!
+crypto ecdsakey ecdsa generate 256
+!
+aaa userlist usr
+ username admin
+ username admin password $v10$YWRtaW5AMTIz
+ exit
+!
+vrf definition CORE
+ exit
+!
+vrf definition OOB
+ exit
+!
+router ospf4 1
+ vrf CORE
+ router-id 10.99.0.2
+ traffeng-id 0.0.0.0
+ area 0 enable
+ area 0 segrout
+ redistribute connected
+ exit
+!
+interface loopback0
+ vrf forwarding CORE
+ ipv4 address 10.99.0.2 255.255.255.255
+ router ospf4 1 enable
+ router ospf4 1 area 0
+ no shutdown
+ no log-link-change
+ exit
+!
+interface ethernet1
+ description To_cjunosevo-1
+ vrf forwarding CORE
+ ipv4 address 10.0.1.2 255.255.255.252
+ router ospf4 1 enable
+ router ospf4 1 area 0
+ no shutdown
+ no log-link-change
+ exit
+!
+interface ethernet255
+ description MGMT
+ vrf forwarding OOB
+ ipv4 address 172.20.20.102 255.255.255.0
+ no shutdown
+ no log-link-change
+ exit
+!
+console0
+ no exec authorization
+ no login authentication
+ exit
+!
+!
+!
+server telnet OOB
+ security authentication usr
+ security rsakey rsa
+ security dsakey dsa
+ security ecdsakey ecdsa
+ second-port 22
+ exec logging
+ no exec authorization
+ login authentication usr
+ login logging
+ vrf OOB
+ exit
+!
+!
+end
